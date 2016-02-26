@@ -8,7 +8,6 @@ angular.module('FileSync')
     var _callback;
 
     SocketIOService.onFileChanged(function (filename, timestamp, content) {
-      debugger;
       if(!history[filename]){
         files.push(filename);
         history[filename] = new Array();
