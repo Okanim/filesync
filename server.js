@@ -5,6 +5,7 @@ var express = require('express');
 var path = require('path');
 var app = express();
 var _ = require('lodash');
+var fs = require('fs');
 
 var logger = require('winston');
 var config = require('./config')(logger);
@@ -19,6 +20,20 @@ var server = app.listen(config.server.port, function() {
   logger.info('Server listening on %s', config.server.port);
 });
 
+var history;
+
+fs.readFile('history.json', 'utf8', function(err, content){
+  if(err) {
+    fs.writeFileSync('history.json', JSON.stringify({}));
+    history = new Object();
+  } else {
+    if(content == ""){
+      history = new Object();
+    } else {
+      history = JSON.parse(content);
+    }
+  }
+})
 
 var sio = io(server);
 
@@ -56,7 +71,10 @@ var viewers = Viewers(sio);
 
 // @todo extract in its own
 sio.on('connection', function(socket) {
-
+    console.log(Object.keys(history).length);
+  if(Object.keys(history).length > 0){
+    sio.emit('history:init', history);
+  }
   // console.log('nouvelle connexion', socket.id);
   socket.on('viewer:new', function(nickname) {
     socket.nickname = nickname;
@@ -75,7 +93,14 @@ sio.on('connection', function(socket) {
       // skip this
       return socket.emit('error:auth', 'Unauthorized :)');
     }
-
+      var obj = {"timestamp" : arguments[1], "content": arguments[2]};
+      if(!history[arguments[0]]){
+        history[arguments[0]] = new Array();
+      }
+      history[arguments[0]].unshift(obj);
+      fs.writeFile('history.json', JSON.stringify(history), function(err){
+        if(err) console.log(err);
+      });
     // forward the event to everyone
     sio.emit.apply(sio, ['file:changed'].concat(_.toArray(arguments)));
   });

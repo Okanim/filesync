@@ -10,9 +10,6 @@ angular.module('FileSync')
       var login = prompt('Nickname?');
       socket.emit('viewer:new', login);
     });
-
-
-
     socket.on('file:changed', function(filename, timestamp, content) {
       $timeout(function() {
         _onFileChanged(filename, timestamp, content);
@@ -42,7 +39,9 @@ angular.module('FileSync')
       onVisibilityStatesChanged: function(f) {
         _onVisibilityStatesChanged = f;
       },
-
+      onHistoryInit: function(f){
+        socket.on('history:init', f);
+      },
       userChangedState: function(state) {
         socket.emit('user-visibility:changed', state);
       }

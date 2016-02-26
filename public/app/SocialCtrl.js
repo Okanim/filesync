@@ -8,6 +8,5 @@ angular
       this.viewers = viewers;
       $scope.$apply();
     }
-
     SocketIOService.onViewersUpdated(onViewersUpdated.bind(this));
   }]);
